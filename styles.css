@@ -18,6 +18,20 @@ h1, h2 {
     color: #333;
 }
 
+.libertadores {
+    background-color: #00AF71 !important;
+    color: white;
+}
+
+.sudamericana {
+    background-color: #F5F374 !important;
+}
+
+.estudiantes {
+    background-color: #006400 !important;
+    color: white;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
