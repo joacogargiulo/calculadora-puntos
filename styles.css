@@ -19,16 +19,16 @@ h1, h2 {
 }
 
 .libertadores {
-    background-color: #00AF71 !important;
+    background-color: #3ea06d !important;
     color: white;
 }
 
 .sudamericana {
-    background-color: #F5F374 !important;
+    background-color: #f9c000 !important;
 }
 
 .estudiantes {
-    background-color: #006400 !important;
+    background-color: #66bf01 !important;
     color: white;
 }
 
@@ -45,7 +45,7 @@ th, td {
 }
 
 th {
-    background-color: #4CAF50;
+    background-color: #044b8b;
     color: white;
 }
 
@@ -102,4 +102,9 @@ button {
     color: white;
     border: none;
     border-radius: 5px;
+}
+
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none; 
+    margin: 0; 
 }
