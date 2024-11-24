@@ -162,6 +162,7 @@ function renderTablaAnual() {
 
     // Verificar la posición de Estudiantes (LP).
     let estudiantesPos = tablaAnual.findIndex(e => e.equipo === "Estudiantes (LP)");
+    let racingPos = tablaAnual.findIndex(e => e.equipo === "Racing Club");
 
     // Determinar clases de colores según posiciones.
     tablaAnual.forEach((equipo, index) => {
@@ -186,11 +187,21 @@ function renderTablaAnual() {
 
             // Aplicar colores según la clasificación.
             if (cellIndex === 0) {
-                if (equipo.equipo === "Estudiantes (LP)") {
+                if (equipo.equipo === "Estudiantes (LP)" || equipo.equipo === "Racing Club") {
                     cell.classList.add("estudiantes");
-                } else if (index < 3 || (estudiantesPos >= 0 && estudiantesPos < 3 && index < 4)) {
+                } else if (
+                    index < 3 ||
+                    (estudiantesPos >= 0 && estudiantesPos < 3 && index < 4) ||
+                    (racingPos >= 0 && racingPos < 3 && index < 4) ||
+                    (racingPos >= 0 && racingPos < 3 && estudiantesPos >= 0 && estudiantesPos < 3 && index < 5)
+                ) {
                     cell.classList.add("libertadores");
-                } else if (index < 9 || (estudiantesPos >= 0 && estudiantesPos <= 8 && index < 10)) {
+                } else if (
+                    index < 9 ||
+                    (estudiantesPos >= 0 && estudiantesPos <= 8 && index < 10) ||
+                    (racingPos >= 0 && racingPos < 8 && index < 10) ||
+                    (racingPos >= 0 && racingPos < 8 && estudiantesPos >= 0 && estudiantesPos < 8 && index < 11)
+                ) {
                     cell.classList.add("sudamericana");
                 }
             } 
