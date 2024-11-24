@@ -1,5 +1,6 @@
 let tablaActual
 let tablaAnual
+let partidosRestantes
 
 async function obtenerDatosTablas() {
     try {
@@ -20,9 +21,22 @@ async function obtenerDatosTablas() {
     }
 }
 
+async function obtenerPartidos() {
+    try {
+        const response = await fetch('https://api-promiedos.onrender.com/partido')
+        const data = await response.json()
 
-// Lista completa de partidos restantes con fechas
-const partidosRestantes = [
+        
+        filtrarPartidos(data)
+        
+    } catch (error) {
+        
+    }
+}
+
+
+// Lista completa de partidosRestantes restantes con fechas
+const partidos = [
     // Fecha 24
     { fecha: 24, equipo1: "Tigre", equipo2: "Instituto" },
     { fecha: 24, equipo1: "Huracan", equipo2: "Boca Juniors" },
@@ -88,6 +102,21 @@ const partidosRestantes = [
 // Seleccionar elementos del DOM para ambas tablas.
 const tbody = document.getElementById("tabla-puntos");
 const tbodyAnual = document.getElementById("tabla-anual");
+
+function filtrarPartidos(proxPartido) {    
+    indice = partidos.findIndex(obj => 
+            obj.equipo1 === proxPartido.equipo1 &&
+            obj.equipo2 === proxPartido.equipo2
+        );
+    if (indice === -1){
+        console.log("error filtrando");
+        return partidos;
+    }
+        
+    // Retorna los elementos desde el índice encontrado
+    partidosRestantes =  partidos.slice(indice);
+    renderizarPartidos()
+}
 
 // Generar la tabla inicial de puntos.
 function renderTabla() {
@@ -212,31 +241,34 @@ function calcularPuntos(tabla) {
 
 }
 
-// Generar los inputs para los partidos y dividir por fecha.
+// Generar los inputs para los partidosRestantes y dividir por fecha.
 const matchesContainer = document.getElementById("matches-container");
 let currentFecha = null;
 
-partidosRestantes.forEach((partido, index) => {
-    // Crear un divisor de fecha si cambia la fecha.
-    if (currentFecha !== partido.fecha) {
-        currentFecha = partido.fecha;
-        const fechaDivisor = document.createElement("h3");
-        fechaDivisor.textContent = `Fecha ${currentFecha}`;
-        matchesContainer.appendChild(fechaDivisor);
-    }
-
-    // Crear el input para cada partido.
-    const matchDiv = document.createElement("div");
-    matchDiv.classList.add("match");
-
-    matchDiv.innerHTML = `
+function renderizarPartidos() {
+    partidosRestantes.forEach((partido, index) => {    
+        // Crear un divisor de fecha si cambia la fecha.
+        if (currentFecha !== partido.fecha) {
+            currentFecha = partido.fecha;
+            const fechaDivisor = document.createElement("h3");
+            fechaDivisor.textContent = `Fecha ${currentFecha}`;
+            matchesContainer.appendChild(fechaDivisor);
+        }
+        
+        // Crear el input para cada partido.
+        const matchDiv = document.createElement("div");
+        matchDiv.classList.add("match");
+        
+        matchDiv.innerHTML = `
         <label>${partido.equipo1} vs ${partido.equipo2}</label>
         <input type="number" id="score-${index}-team1" min=0>
         <span> - </span>
         <input type="number" id="score-${index}-team2" min="0">
-    `;
-    matchesContainer.appendChild(matchDiv);
-});
+        `;
+        matchesContainer.appendChild(matchDiv);
+    });
+    obtenerDatosTablas()
+}
 
 
 // Función para generar resultados aleatorios entre 0 y 3 para cada input
@@ -252,5 +284,4 @@ function resultadosRandom() {
 
 matchesContainer.addEventListener("input", obtenerDatosTablas)
 
-// Llama a la función obtenerDatosTablas para inicializar los datos desde la API
-obtenerDatosTablas();
+obtenerPartidos()
