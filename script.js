@@ -104,7 +104,6 @@ async function obtenerDatosTablas() {
             tablaAnual.find((e => e.equipo === "Racing Club"))
         ]
         actualizarTablas()
-        obtenerPartidos()
     } catch (error) {
         manejarError('Error al obtener las tablas:', error);
     }
@@ -317,7 +316,6 @@ function renderizarPartidos() {
         `;
         matchesContainer.appendChild(matchDiv);
     });
-    // obtenerDatosTablas()
 }
 
 // Función para generar resultados aleatorios entre 0 y 3 para cada input
@@ -333,5 +331,15 @@ function resultadosRandom() {
 
 matchesContainer.addEventListener("input", obtenerDatosTablas)
 
-obtenerDatosTablas()
-// obtenerPartidos()
+async function inicializar() {
+    try {
+        // Espera que se completen las tablas antes de proceder con los partidos
+        await obtenerDatosTablas();
+        await obtenerPartidos();
+    } catch (error) {
+        manejarError('Error al inicializar los datos:', error);
+    }
+}
+
+// Ejecutar la inicialización
+inicializar();
