@@ -3,6 +3,7 @@ const tbody = document.getElementById("tabla-puntos");
 const tbodyAnual = document.getElementById("tabla-anual");
 const tbodyPromedios = document.getElementById("tabla-promedios");
 const urlAPI = "https://api-promiedos.onrender.com"
+// const urlAPI = "http://localhost:3000"
 
 let clasificados = []
 let cuposLibertadores = 3
@@ -12,6 +13,7 @@ let tablaAnual = []
 let tablaPromedios = []
 let partidosRestantes = []
 let currentFecha = null;
+let partidoInvalido
 
 const partidos = [
     // Fecha 24
@@ -78,11 +80,16 @@ const partidos = [
 
 function manejarError(mensaje, error) {
     console.error(`${mensaje}`, error);    
+    showNotification(mensaje, 'error')
 }
 
 async function fetchDatos(url) {
     try {
         const response = await fetch(url)
+        if (response.status === 202) {
+            partidoInvalido = true
+        }
+        
         return response.json()
         
     } catch (error) {
@@ -92,7 +99,9 @@ async function fetchDatos(url) {
 
 async function obtenerDatosTablas() {
     try {
+        showLoading()
         const data = await fetchDatos(urlAPI+'/posiciones')
+        
 
         // Asignar las tablas recibidas a las variables locales
         tablaActual = data.tablaPuntosPrimera;
@@ -106,6 +115,8 @@ async function obtenerDatosTablas() {
         actualizarTablas()
     } catch (error) {
         manejarError('Error al obtener las tablas:', error);
+    } finally {
+        hideLoading()
     }
 }
 
@@ -130,14 +141,15 @@ function actualizarTablas() {
 
 
 function filtrarPartidos(proxPartido) {    
-    const indice = partidos.findIndex(
+    let indice = partidos.findIndex(
         (p) => p.equipo1 === proxPartido.equipo1 && p.equipo2 === proxPartido.equipo2
     );
     if (indice === -1){
         manejarError('Error filtrando los partidos', proxPartido)
         return
     }
-        
+
+    if (partidoInvalido) indice++
     // Retorna los elementos desde el índice encontrado
     partidosRestantes =  partidos.slice(indice);
     renderizarPartidos()
@@ -329,6 +341,17 @@ function resultadosRandom() {
     });
 }
 
+const loadingScreen = document.getElementById("loading-screen");
+
+function showLoading() {
+    loadingScreen.style.display = "flex";
+}
+
+function hideLoading() {
+    loadingScreen.style.display = "none";
+}
+
+
 matchesContainer.addEventListener("input", obtenerDatosTablas)
 
 async function inicializar() {
@@ -340,6 +363,27 @@ async function inicializar() {
         manejarError('Error al inicializar los datos:', error);
     }
 }
+
+// Mostrar una notificación
+function showNotification(message, type = 'error') {
+    const notification = document.getElementById('notification');
+    const messageContainer = document.getElementById('notification-message');
+
+    // Establecer el mensaje
+    messageContainer.textContent = message;
+
+    // Cambiar el color según el tipo (error, éxito, etc.)
+    notification.style.backgroundColor = type === 'error' ? '#f44336' : '#4CAF50';
+
+    // Mostrar la notificación
+    notification.classList.remove('hidden');
+
+    // Ocultar automáticamente después de 5 segundos
+    setTimeout(() => {
+        notification.classList.add('hidden');
+    }, 5000);
+}
+
 
 // Ejecutar la inicialización
 inicializar();
