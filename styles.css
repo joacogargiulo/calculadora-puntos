@@ -55,7 +55,7 @@ table {
 }
 
 th, td {
-    padding: 10px;
+    padding: 10px 3px;
     text-align: center;
     border: 1px solid #ddd;
 }
@@ -236,3 +236,63 @@ input::-webkit-inner-spin-button {
     display: none;
 }
  
+/* Media query para pantallas pequeñas (celulares y tablets) */
+@media (max-width: 768px) {
+    .main-container {
+        flex-direction: column; /* Cambia el layout a columna */
+        align-items: center;    /* Centra los elementos */
+    }
+
+    .table-container, 
+    .calculator-container {
+        width: 100%;          /* Ocupa el ancho completo */
+        margin-right: 0;      /* Elimina margen lateral */
+        margin-bottom: 20px;  /* Agrega separación vertical */
+    }
+
+    #matches-container {
+        width: 90%;          /* Reduce el ancho para mayor legibilidad */
+        margin: 0 auto;      /* Centra el contenido horizontalmente */
+    }
+
+    /* Ajustes de tamaño de fuente */
+    h1, h2 {
+        font-size: 1.5rem; /* Reduce el tamaño de los títulos */
+    }
+
+    h3 {
+        font-size: 1.2rem; /* Reduce el tamaño de subtítulos */
+    }
+
+    th, td {
+        font-size: 0.9rem; /* Reduce el tamaño de las celdas */
+        padding: 5 2;
+    }
+
+    .match-score input {
+        width: 25px; /* Reduce el tamaño de los inputs */
+        height: 18px; /* Ajusta la altura */
+        font-size: 0.9rem; /* Reduce el tamaño de fuente de los inputs */
+    }
+
+    button {
+        font-size: 14px; /* Reduce el tamaño de los botones */
+        padding: 8px 15%; /* Ajusta el padding */
+    }
+
+    .notification {
+        font-size: 0.9rem; /* Reduce el tamaño del texto en la notificación */
+    }
+
+    /* Ajustes de tamaño de las imágenes */
+    td img {
+        width: 20px;  /* Ancho de las imágenes en las celdas */
+        height: auto; /* Mantener la proporción de las imágenes */
+        margin-right: 5px; /* Espaciado entre la imagen y el texto */
+    }
+
+    .team-logo {
+        width: 25px; /* Ajusta el tamaño de los logos de equipos */
+        height: auto; /* Mantener proporción */
+    }
+}
