@@ -2,8 +2,15 @@ const matchesContainer = document.getElementById("matches-container");
 const tbody = document.getElementById("tabla-puntos");
 const tbodyAnual = document.getElementById("tabla-anual");
 const tbodyPromedios = document.getElementById("tabla-promedios");
-const urlAPI = "https://api-promiedos.onrender.com"
-// const urlAPI = "http://localhost:3000"
+const loadingScreen = document.getElementById("loading-screen");
+const loadingP = document.getElementById("loading-p");
+const cache = {
+    tablaActual: null,
+    tablaAnual: null,
+    tablaPromedios: null
+}
+// const urlAPI = "https://api-promiedos.onrender.com"
+const urlAPI = "http://localhost:3000"
 
 let clasificados = []
 let cuposLibertadores = 3
@@ -13,7 +20,10 @@ let tablaAnual = []
 let tablaPromedios = []
 let partidosRestantes = []
 let currentFecha = null;
-let partidoInvalido
+let partidoInvalido = false
+let partidoEnJuego = false
+let resultado1
+let resultado2
 
 const partidos = [
     // Fecha 24
@@ -47,20 +57,20 @@ const partidos = [
     { fecha: 25, equipo1: "Ind Rivadavia", equipo2: "Argentinos" },
     { fecha: 25, equipo1: "Atl Tucuman", equipo2: "Newells" },
     // Fecha 26
-    { fecha: 26, equipo1: "Argentinos", equipo2: "San Lorenzo" },
-    { fecha: 26, equipo1: "Belgrano", equipo2: "Estudiantes (LP)" },
-    { fecha: 26, equipo1: "Central Cba (SdE)", equipo2: "Racing Club" },
     { fecha: 26, equipo1: "Riestra", equipo2: "Barracas Central" },
+    { fecha: 26, equipo1: "Sarmiento (J)", equipo2: "Def y Justicia" },
+    { fecha: 26, equipo1: "Lanus", equipo2: "Instituto" },
+    { fecha: 26, equipo1: "Union", equipo2: "Velez" },
+    { fecha: 26, equipo1: "Central Cba (SdE)", equipo2: "Racing Club" },
     { fecha: 26, equipo1: "Gimnasia (LP)", equipo2: "Talleres (C)" },
     { fecha: 26, equipo1: "Godoy Cruz", equipo2: "Banfield" },
+    { fecha: 26, equipo1: "River Plate", equipo2: "Rosario Central" },
+    { fecha: 26, equipo1: "Newells", equipo2: "Boca Juniors" },
+    { fecha: 26, equipo1: "Tigre", equipo2: "Ind Rivadavia" },
+    { fecha: 26, equipo1: "Argentinos", equipo2: "San Lorenzo" },
+    { fecha: 26, equipo1: "Belgrano", equipo2: "Estudiantes (LP)" },
     { fecha: 26, equipo1: "Huracan", equipo2: "Platense" },
     { fecha: 26, equipo1: "Independiente", equipo2: "Atl Tucuman" },
-    { fecha: 26, equipo1: "Lanus", equipo2: "Instituto" },
-    { fecha: 26, equipo1: "Newells", equipo2: "Boca Juniors" },
-    { fecha: 26, equipo1: "River Plate", equipo2: "Rosario Central" },
-    { fecha: 26, equipo1: "Sarmiento (J)", equipo2: "Def y Justicia" },
-    { fecha: 26, equipo1: "Tigre", equipo2: "Ind Rivadavia" },
-    { fecha: 26, equipo1: "Union", equipo2: "Velez" },
     // Fecha 27
     { fecha: 27, equipo1: "Atl Tucuman", equipo2: "Central Cba (SdE)" },
     { fecha: 27, equipo1: "Banfield", equipo2: "Sarmiento (J)" },
@@ -86,7 +96,9 @@ function manejarError(mensaje, error) {
 async function fetchDatos(url) {
     try {
         const response = await fetch(url)
-        if (response.status === 202) {
+        if (response.status === 201) {
+            partidoEnJuego = true
+        } else if (response.status === 202) {
             partidoInvalido = true
         }
         
@@ -99,19 +111,28 @@ async function fetchDatos(url) {
 
 async function obtenerDatosTablas() {
     try {
-        showLoading()
-        const data = await fetchDatos(urlAPI+'/posiciones')
-        
+        if(cache.tablaActual && cache.tablaAnual && cache.tablaPromedios){
+            tablaActual = JSON.parse(JSON.stringify(cache.tablaActual));
+            tablaAnual = JSON.parse(JSON.stringify(cache.tablaAnual));
+            tablaPromedios = JSON.parse(JSON.stringify(cache.tablaPromedios));
 
-        // Asignar las tablas recibidas a las variables locales
-        tablaActual = data.tablaPuntosPrimera;
-        tablaAnual = data.tablaAnual;
-        tablaPromedios = data.tablaPromedios
+        } else {
+            const data = await fetchDatos(urlAPI+'/posiciones')   
+            // Asignar las tablas recibidas a las variables locales
+            tablaActual = data.tablaPuntosPrimera;
+            tablaAnual = data.tablaAnual;
+            tablaPromedios = data.tablaPromedios
         
-        clasificados = [
-            tablaAnual.find((e => e.equipo === "Estudiantes (LP)")),
-            tablaAnual.find((e => e.equipo === "Racing Club"))
-        ]
+            cache.tablaActual = JSON.parse(JSON.stringify(tablaActual));
+            cache.tablaAnual = JSON.parse(JSON.stringify(tablaAnual));
+            cache.tablaPromedios = JSON.parse(JSON.stringify(tablaPromedios));
+
+            
+            clasificados = [
+                tablaAnual.find((e => e.equipo === "Estudiantes (LP)")),
+                tablaAnual.find((e => e.equipo === "Racing Club"))
+            ]
+        }
         actualizarTablas()
     } catch (error) {
         manejarError('Error al obtener las tablas:', error);
@@ -124,6 +145,10 @@ async function obtenerDatosTablas() {
 async function obtenerPartidos() {
     try {
         const data = await fetchDatos(urlAPI+'/partido')        
+        if (partidoEnJuego) {
+            resultado1 = data.resultado1
+            resultado2 = data.resultado2
+        }
         filtrarPartidos(data)
     } catch (error) {
         manejarError('Error al obtener los partidos:', error);        
@@ -263,6 +288,9 @@ function renderTablaPromedios() {
 
 function actualizarPuntos(tabla) {
     partidosRestantes.forEach((partido, index) => {
+        if (partidoEnJuego && index === 0 ) {
+            return
+        }
         const score1 = parseInt(document.getElementById(`score-${index}-team1`).value)
         const score2 = parseInt(document.getElementById(`score-${index}-team2`).value)
         
@@ -289,6 +317,7 @@ function calcularPuntos(equipo, golesFavor, golesContra) {
         equipo.pp ++
     } else {
         equipo.pts ++
+        equipo.temporada24++
         equipo.pe ++
     }
 
@@ -317,9 +346,9 @@ function renderizarPartidos() {
             <span>${partido.equipo1}</span>
         </div>
         <div class="match-score">
-            <input type="number" id="score-${index}-team1" min=0>
+            <input type="number" id="score-${index}-team1" min=0 value = ${index === 0 ? (partidoEnJuego === true ? resultado1 : '') : ''} ${partidoEnJuego === true ? 'disabled' : ''}>
             <span> - </span>
-            <input type="number" id="score-${index}-team2" min="0">
+            <input type="number" id="score-${index}-team2" min="0" value= ${index === 0 ? (partidoEnJuego === true ? resultado2 : '') : ''} ${partidoEnJuego === true ? 'disabled' : ''} >
         </div>
         <div class="match-team">
             <span>${partido.equipo2}</span>
@@ -333,19 +362,18 @@ function renderizarPartidos() {
 // Función para generar resultados aleatorios entre 0 y 3 para cada input
 function resultadosRandom() {
     partidosRestantes.forEach((_, index) => {
+        if (partidoEnJuego && index === 0 ) {
+            return
+        }
         const score1Input = document.getElementById(`score-${index}-team1`);
         const score2Input = document.getElementById(`score-${index}-team2`);
         
         score1Input.value = Math.floor(Math.random() * 4);
         score2Input.value = Math.floor(Math.random() * 4);
     });
+    obtenerDatosTablas()
 }
 
-const loadingScreen = document.getElementById("loading-screen");
-
-function showLoading() {
-    loadingScreen.style.display = "flex";
-}
 
 function hideLoading() {
     loadingScreen.style.display = "none";
@@ -357,6 +385,12 @@ matchesContainer.addEventListener("input", obtenerDatosTablas)
 async function inicializar() {
     try {
         // Espera que se completen las tablas antes de proceder con los partidos
+        setTimeout(() => {
+            loadingP.style.display = "block"
+            setTimeout(() => {
+                loadingP.innerHTML = "Ya casi..."
+            }, 10000);
+        }, 5000);
         await obtenerDatosTablas();
         await obtenerPartidos();
     } catch (error) {
