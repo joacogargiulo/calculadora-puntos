@@ -9,8 +9,8 @@ const cache = {
     tablaAnual: null,
     tablaPromedios: null
 }
-const urlAPI = "https://api-promiedos.onrender.com"
-// const urlAPI = "http://localhost:3000"
+// const urlAPI = "https://api-promiedos.onrender.com"
+const urlAPI = "http://localhost:3000"
 
 let clasificados = []
 let cuposLibertadores = 3
@@ -24,6 +24,7 @@ let partidoInvalido = false
 let partidoEnJuego = false
 let resultado1
 let resultado2
+let partidosEnJuego = []
 
 const partidos = [
     // Fecha 24
@@ -135,7 +136,7 @@ async function obtenerDatosTablas() {
         }
         actualizarTablas()
     } catch (error) {
-        manejarError('Error al obtener las tablas:', error);
+        manejarError('Error al obtener las tablas ', error);
     } finally {
         hideLoading()
     }
@@ -146,12 +147,15 @@ async function obtenerPartidos() {
     try {
         const data = await fetchDatos(urlAPI+'/partido')        
         if (partidoEnJuego) {
-            resultado1 = data.resultado1
-            resultado2 = data.resultado2
+            data.forEach(partido => {
+                partidosEnJuego.push(partido)
+            });
         }
+
+        
         filtrarPartidos(data)
     } catch (error) {
-        manejarError('Error al obtener los partidos:', error);        
+        manejarError('Error al obtener los partidos ', error);        
     }
 }
 
@@ -166,9 +170,13 @@ function actualizarTablas() {
 
 
 function filtrarPartidos(proxPartido) {    
-    let indice = partidos.findIndex(
-        (p) => p.equipo1 === proxPartido.equipo1 && p.equipo2 === proxPartido.equipo2
-    );
+    let indice = partidos.findIndex((p) => {
+        if (partidoEnJuego) {            
+           return p.equipo1 === partidosEnJuego[0].equipo1 && p.equipo2 === partidosEnJuego[0].equipo2
+        } else {
+            return p.equipo1 === proxPartido.equipo1 && p.equipo2 === proxPartido.equipo2
+        }
+    });
     if (indice === -1){
         manejarError('Error filtrando los partidos', proxPartido)
         return
@@ -181,9 +189,7 @@ function filtrarPartidos(proxPartido) {
 }
 
 function revisarCupos() {
-    cuposLibertadores = 3
-    cuposSudamericana = 6
-    clasificados.sort((a, b) => b.pts - a.pts || b.dif - a.dif)
+    ordenarTabla(clasificados)
     clasificados.forEach((clasificado) => {
         const posicion = tablaAnual.findIndex(e => e.equipo === clasificado.equipo)        
         if (posicion < cuposLibertadores) {
@@ -193,10 +199,11 @@ function revisarCupos() {
         }
     })
 }
+
 function renderTabla(container, tabla) {
     container.innerHTML = ""; // Limpiar la tabla antes de actualizar.
     // Ordenar la tabla por puntos y diferencia de goles.
-    tabla.sort((a, b) => b.pts - a.pts || b.dif - a.dif);
+    ordenarTabla(tabla)
 
     if(tabla === tablaAnual) revisarCupos()
     
@@ -250,10 +257,14 @@ function renderTabla(container, tabla) {
     });
 }
 
+function ordenarTabla(tabla) {
+    tabla.sort((a, b) => b.pts - a.pts || b.dif - a.dif || b.gf - a.gf)
+}
+
 function renderTablaPromedios() {
     tbodyPromedios.innerHTML = ""; // Limpiar la tabla antes de actualizar.
     // Ordenar la tabla por puntos y diferencia de goles.
-    tablaPromedios.sort((a, b) => b.pts - a.pts || b.dif - a.dif);
+    ordenarTabla(tablaPromedios)
     
     tablaPromedios.forEach((equipo, index) => {
         const row = document.createElement("tr");
@@ -346,9 +357,9 @@ function renderizarPartidos() {
             <span>${partido.equipo1}</span>
         </div>
         <div class="match-score">
-            <input type="number" id="score-${index}-team1" min=0 value = ${index === 0 ? (partidoEnJuego === true ? resultado1 : '') : ''} ${partidoEnJuego === true ? 'disabled' : ''}>
+            <input type="number" id="score-${index}-team1" min=0 ${index < partidosEnJuego.length ? (partidoEnJuego === true ? 'disabled' : '') : ''} value=${index < partidosEnJuego.length ? (partidoEnJuego === true ? partidosEnJuego[index].resultado1 : '') : ''}>
             <span> - </span>
-            <input type="number" id="score-${index}-team2" min="0" value= ${index === 0 ? (partidoEnJuego === true ? resultado2 : '') : ''} ${partidoEnJuego === true ? 'disabled' : ''} >
+            <input type="number" id="score-${index}-team2" min="0" ${index < partidosEnJuego.length ? (partidoEnJuego === true ? 'disabled' : '') : ''} value=${index < partidosEnJuego.length ? (partidoEnJuego === true ? partidosEnJuego[index].resultado2 : '') : ''} >
         </div>
         <div class="match-team">
             <span>${partido.equipo2}</span>
@@ -362,7 +373,7 @@ function renderizarPartidos() {
 // Función para generar resultados aleatorios entre 0 y 3 para cada input
 function resultadosRandom() {
     partidosRestantes.forEach((_, index) => {
-        if (partidoEnJuego && index === 0 ) {
+        if (partidoEnJuego && index < partidosEnJuego.length) {
             return
         }
         const score1Input = document.getElementById(`score-${index}-team1`);
@@ -384,18 +395,27 @@ matchesContainer.addEventListener("input", obtenerDatosTablas)
 
 async function inicializar() {
     try {
+        cuentaAtras()
         // Espera que se completen las tablas antes de proceder con los partidos
-        setTimeout(() => {
-            loadingP.style.display = "block"
-            setTimeout(() => {
-                loadingP.innerHTML = "Ya casi..."
-            }, 10000);
-        }, 5000);
         await obtenerDatosTablas();
         await obtenerPartidos();
     } catch (error) {
         manejarError('Error al inicializar los datos:', error);
     }
+}
+
+function cuentaAtras() {
+    let tiempoRestante = 30
+    const intervalo = setInterval(() => {
+        loadingP.innerHTML = "Tiempo restante " + tiempoRestante + " segundos"
+        tiempoRestante--
+
+        if (tiempoRestante < 0) {
+            loadingP.innerHTML = "Ya casi..."
+            clearInterval(intervalo)
+        }
+
+    }, 1000)
 }
 
 // Mostrar una notificación
