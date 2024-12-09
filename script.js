@@ -9,8 +9,8 @@ const cache = {
     tablaAnual: null,
     tablaPromedios: null
 }
-// const urlAPI = "https://api-promiedos.onrender.com"
-const urlAPI = "http://localhost:3000"
+const urlAPI = "https://api-promiedos.onrender.com"
+// const urlAPI = "http://localhost:3000"
 
 let clasificados = []
 let cuposLibertadores = 3
