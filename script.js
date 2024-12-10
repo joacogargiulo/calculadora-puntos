@@ -13,8 +13,8 @@ const urlAPI = "https://api-promiedos.onrender.com"
 // const urlAPI = "http://localhost:3000"
 
 let clasificados = []
-let cuposLibertadores = 3
-let cuposSudamericana = 6
+let cuposLibertadores
+let cuposSudamericana
 let tablaActual = []
 let tablaAnual = []
 let tablaPromedios = []
@@ -189,6 +189,8 @@ function filtrarPartidos(proxPartido) {
 }
 
 function revisarCupos() {
+    cuposLibertadores = 3
+    cuposSudamericana = 6
     ordenarTabla(clasificados)
     clasificados.forEach((clasificado) => {
         const posicion = tablaAnual.findIndex(e => e.equipo === clasificado.equipo)        
