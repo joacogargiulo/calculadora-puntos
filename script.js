@@ -9,12 +9,12 @@ const cache = {
     tablaAnual: null,
     tablaPromedios: null
 }
-const urlAPI = "https://api-promiedos.onrender.com"
-// const urlAPI = "http://localhost:3000"
+const urlAPI = "https://api-promiedos.onrender.com" // URL de producción
+// const urlAPI = "http://localhost:3000" // URL de desarrollo
 
 let clasificados = []
-let cuposLibertadores = 3
-let cuposSudamericana = 6
+let cuposLibertadores
+let cuposSudamericana
 let tablaActual = []
 let tablaAnual = []
 let tablaPromedios = []
@@ -73,20 +73,20 @@ const partidos = [
     { fecha: 26, equipo1: "Huracan", equipo2: "Platense" },
     { fecha: 26, equipo1: "Independiente", equipo2: "Atl Tucuman" },
     // Fecha 27
-    { fecha: 27, equipo1: "Atl Tucuman", equipo2: "Central Cba (SdE)" },
-    { fecha: 27, equipo1: "Banfield", equipo2: "Sarmiento (J)" },
     { fecha: 27, equipo1: "Barracas Central", equipo2: "Lanus" },
-    { fecha: 27, equipo1: "Boca Juniors", equipo2: "Independiente" },
-    { fecha: 27, equipo1: "Def y Justicia", equipo2: "Union" },
     { fecha: 27, equipo1: "Estudiantes (LP)", equipo2: "Argentinos" },
-    { fecha: 27, equipo1: "Ind Rivadavia", equipo2: "Riestra" },
-    { fecha: 27, equipo1: "Instituto", equipo2: "Godoy Cruz" },
-    { fecha: 27, equipo1: "Platense", equipo2: "Gimnasia (LP)" },
-    { fecha: 27, equipo1: "Racing Club", equipo2: "River Plate" },
-    { fecha: 27, equipo1: "Rosario Central", equipo2: "Belgrano" },
+    { fecha: 27, equipo1: "Banfield", equipo2: "Sarmiento (J)" },
     { fecha: 27, equipo1: "San Lorenzo", equipo2: "Tigre" },
+    { fecha: 27, equipo1: "Instituto", equipo2: "Godoy Cruz" },
+    { fecha: 27, equipo1: "Rosario Central", equipo2: "Belgrano" },
+    { fecha: 27, equipo1: "Boca Juniors", equipo2: "Independiente" },
+    { fecha: 27, equipo1: "Racing Club", equipo2: "River Plate" },
+    { fecha: 27, equipo1: "Def y Justicia", equipo2: "Union" },
+    { fecha: 27, equipo1: "Platense", equipo2: "Gimnasia (LP)" },
     { fecha: 27, equipo1: "Talleres (C)", equipo2: "Newells" },
-    { fecha: 27, equipo1: "Velez", equipo2: "Huracan" }
+    { fecha: 27, equipo1: "Velez", equipo2: "Huracan" },
+    { fecha: 27, equipo1: "Atl Tucuman", equipo2: "Central Cba (SdE)" },
+    { fecha: 27, equipo1: "Ind Rivadavia", equipo2: "Riestra" },
 ];
 
 function manejarError(mensaje, error) {
@@ -128,11 +128,6 @@ async function obtenerDatosTablas() {
             cache.tablaAnual = JSON.parse(JSON.stringify(tablaAnual));
             cache.tablaPromedios = JSON.parse(JSON.stringify(tablaPromedios));
 
-            
-            clasificados = [
-                tablaAnual.find((e => e.equipo === "Estudiantes (LP)")),
-                tablaAnual.find((e => e.equipo === "Racing Club"))
-            ]
         }
         actualizarTablas()
     } catch (error) {
@@ -189,6 +184,13 @@ function filtrarPartidos(proxPartido) {
 }
 
 function revisarCupos() {
+    clasificados = [
+        tablaAnual.find((e => e.equipo === "Estudiantes (LP)")),
+        tablaAnual.find((e => e.equipo === "Racing Club")),
+        tablaAnual.find((e => e.equipo === "Central Cba (SdE)"))
+    ]
+    cuposLibertadores = 3
+    cuposSudamericana = 6
     ordenarTabla(clasificados)
     clasificados.forEach((clasificado) => {
         const posicion = tablaAnual.findIndex(e => e.equipo === clasificado.equipo)        
@@ -204,10 +206,7 @@ function renderTabla(container, tabla) {
     container.innerHTML = ""; // Limpiar la tabla antes de actualizar.
     // Ordenar la tabla por puntos y diferencia de goles.
     ordenarTabla(tabla)
-
-    if(tabla === tablaAnual) revisarCupos()
     
-    // Determinar clases de colores según posiciones.
     tabla.forEach((equipo, index) => {
         const row = document.createElement("tr");
         const cells = [
@@ -234,10 +233,11 @@ function renderTabla(container, tabla) {
                 cell.prepend(imagen)
             }
             
+            // Aplicar colores según la clasificación.
             if (tabla === tablaAnual) {
-                // Aplicar colores según la clasificación.
+                revisarCupos()                
                 if (cellIndex === 0) {
-                    if (equipo.equipo === "Estudiantes (LP)" || equipo.equipo === "Racing Club") {
+                    if (clasificados.includes(equipo)) {
                         cell.classList.add("clasificado");
                     } else if (
                         index < cuposLibertadores
