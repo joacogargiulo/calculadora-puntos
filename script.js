@@ -154,6 +154,7 @@ async function obtenerPartidos() {
     }
 }
 
+
 function actualizarTablas() {
     actualizarPuntos(tablaActual)
     actualizarPuntos(tablaAnual)
